@@ -79,6 +79,8 @@ void setup() {
   
   print_result();
   print_weights_result();
+
+  //TODO: calculate weights!
   
 }
 
@@ -136,13 +138,14 @@ void set_labels()
               labels[i][j] = label;
               label += 1;
         }
+        
         //add weights
         if( (m[i][j] < THRESHOLD) &&( m[i][j] > THRESHOLD_2 ) ){
           weights[i][j] = 1;
         }else if( (m[i][j] <= THRESHOLD_2) &&( m[i][j] > 0) ){
           weights[i][j] = 2;
         }else weights[i][j] = 0;
-
+       
       }
     }
 }

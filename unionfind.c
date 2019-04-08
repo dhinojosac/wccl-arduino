@@ -1,6 +1,8 @@
 #include "unionfind.h"
 
-
+/*
+ * 
+ */
 node_t * initUnion(void){
   node_t * head = malloc(sizeof(node_t));
   data_t mdata = {-1,-1};
@@ -8,7 +10,9 @@ node_t * initUnion(void){
   head->next = NULL;
   return head;
 }
-
+/*
+ * 
+ */
 uint8_t add_at(node_t* head, data_t data) 
 {
    if(head->data.low==255)
@@ -27,7 +31,9 @@ uint8_t add_at(node_t* head, data_t data)
     head->next = temp;
     return 0;
 }
-
+/*
+ * 
+ */
 uint8_t check_is_data(node_t* head, data_t data)
 {
     node_t * temp;
@@ -41,6 +47,9 @@ uint8_t check_is_data(node_t* head, data_t data)
     return 1;
 }
 
+/*
+ * 
+ */
 uint8_t get_len_union(node_t* head)
 {
     node_t * temp;
@@ -52,6 +61,9 @@ uint8_t get_len_union(node_t* head)
     return index;
 }
 
+/*
+ * 
+ */
 data_t get_data(node_t* head,uint8_t index)
 {
   node_t * temp;

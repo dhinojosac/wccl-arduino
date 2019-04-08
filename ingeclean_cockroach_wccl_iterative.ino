@@ -7,6 +7,7 @@
  }
  
 #define THRESHOLD 190
+#define THRESHOLD_2 185
 
 #define ROWS 12
 #define COLS 27
@@ -14,11 +15,11 @@
 //Test trap matrix 12x28
 
 int m[12][28] = {
-{199,203,226,218,224,229,229,241,233,241,242,241,241,241,242,242,223,240,235,232,207,229,216,232,200,208,189,192},
-{183,199,210,208,184,207,214,232,209,236,239,234,201,221,228,220,208,218,226,221,204,223,212,207,175,180,191,193},
-{176,199,215,213,214,213,234,239,216,239,240,241,229,240,240,239,218,237,240,229,216,220,216,223,190,200,195,201},
-{185,201,212,217,219,238,240,241,239,242,242,242,231,241,242,241,239,241,241,241,240,239,237,226,215,208,215,202},
-{197,200,226,236,221,239,241,240,238,241,242,242,239,242,242,241,240,241,242,242,238,241,241,239,203,219,215,194},
+{199,203,226,218,224,229,229,241,233,241,242,241,241,241,242,242,223,240,235,232,207,229,216,232,200,180,189,192},
+{183,199,210,208,184,207,214,232,209,236,239,234,201,221,228,220,208,218,226,221,204,223,212,207,180,180,191,193},
+{176,199,215,213,214,213,234,239,216,239,240,241,229,240,240,239,218,237,240,229,216,220,216,223,180,180,180,201},
+{185,201,212,217,219,238,240,241,239,242,242,242,180,241,242,241,239,241,241,241,240,239,237,226,180,180,215,202},
+{197,200,226,236,221,239,241,240,238,241,242,180,180,242,242,241,240,241,242,242,238,241,241,239,203,180,180,194},
 {184,208,230,229,231,239,241,242,240,242,242,241,240,241,242,242,239,241,242,241,241,240,239,240,223,211,201,197},
 {197,200,184,236,221,239,231,240,238,241,240,242,239,242,240,241,240,241,240,242,238,241,241,239,203,219,223,194},
 {226,208,230,229,241,239,241,242,242,242,242,241,242,241,242,242,242,241,242,241,241,240,239,240,215,211,201,197},
@@ -30,6 +31,7 @@ int m[12][28] = {
 
 // the labels, 0 means unlabeled
 uint8_t labels[12][28];
+uint8_t weights[12][28];
 
 // direction vectors
 const uint8_t dx[] = {+1, +1};
@@ -48,9 +50,9 @@ void setup() {
   Serial.begin(9600);
   Serial.println(F("*** IngeClean Board testing **"));
    
-   myUnion = initUnion();
+  myUnion = initUnion(); //init structure
     
-  set_labels();
+  set_labels(); //assign labels
   print_result();
 
   uint8_t len_union = get_len_union(myUnion);
@@ -58,11 +60,12 @@ void setup() {
   Serial.println(len_union);
 
   print_list(myUnion);
+  
 
-
+  //Resolve label issues using union finder.
   for(uint8_t len = len_union; len>0;len--)
   { 
-    data_t temp_data = get_data(myUnion,len-1);
+    data_t temp_data = get_data(myUnion,len-1); //get conflict list
     
     for (uint8_t i = 0; i < ROWS; ++i) 
       for (uint8_t j = 0; j < COLS; ++j){
@@ -75,6 +78,7 @@ void setup() {
   }
   
   print_result();
+  print_weights_result();
   
 }
 
@@ -86,6 +90,7 @@ void set_labels()
 {
   for (uint8_t i = 0; i < ROWS; ++i) 
     for (uint8_t j = 0; j < COLS; ++j){
+      
       if(m[i][j] > THRESHOLD){
         labels[i][j] = 0;
       }else{
@@ -94,17 +99,18 @@ void set_labels()
           
           uint8_t low_level = labels[i][j-1];
           uint8_t high_level = labels[i-1][j];
+          
           if (labels[i][j-1] > labels[i-1][j])
           {
             labels[i][j] = labels[i-1][j];
             low_level = labels[i-1][j];
             high_level = labels[i][j-1];
-           } else {
+          } else {
                 labels[i][j] = labels[i][j-1];
-           }   
+          }   
            
-           //add element to union    
-           if(check_is_data(myUnion, {low_level,high_level})==1){
+           //add conflictable elements to be solved using union finder.
+           if(check_is_data(myUnion, {low_level,high_level}) == 1){
                   add_at(myUnion,{low_level,high_level});
            }
             
@@ -130,6 +136,13 @@ void set_labels()
               labels[i][j] = label;
               label += 1;
         }
+        //add weights
+        if( (m[i][j] < THRESHOLD) &&( m[i][j] > THRESHOLD_2 ) ){
+          weights[i][j] = 1;
+        }else if( (m[i][j] <= THRESHOLD_2) &&( m[i][j] > 0) ){
+          weights[i][j] = 2;
+        }else weights[i][j] = 0;
+
       }
     }
 }
@@ -141,6 +154,19 @@ void print_result()
    {
       for (uint8_t j = 0; j < COLS; ++j){
         Serial.print(labels[i][j]);
+        Serial.print(" ,");
+      }
+    Serial.println();
+   }
+}
+
+void print_weights_result()
+{
+   Serial.println();
+   for (uint8_t i = 0; i < ROWS; ++i) 
+   {
+      for (uint8_t j = 0; j < COLS; ++j){
+        Serial.print(weights[i][j]);
         Serial.print(" ,");
       }
     Serial.println();
